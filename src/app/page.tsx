@@ -26,18 +26,18 @@ export default function home() {
 
   /* 🔹 Load sample data once */
   useEffect(() => {
-    const saved = localStorage.getItem("frontendRows");
+    const saved = sessionStorage.getItem("frontendRows");
     if (saved) {
       setRows(JSON.parse(saved));
     } else {
       setRows(SAMPLE_DATA);
-      localStorage.setItem("frontendRows", JSON.stringify(SAMPLE_DATA));
+      sessionStorage.setItem("frontendRows", JSON.stringify(SAMPLE_DATA));
     }
   }, []);
 
-  /* 🔹 Save updates to localStorage */
+  /* 🔹 Save updates to sessionStorage */
   useEffect(() => {
-    localStorage.setItem("frontendRows", JSON.stringify(rows));
+    sessionStorage.setItem("frontendRows", JSON.stringify(rows));
   }, [rows]);
 
   /* 🔹 Add / Update with TRIM */
