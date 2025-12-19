@@ -1,66 +1,149 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import styles from "./FrontendTable.module.css";
+
+interface RowData {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export default function home() {
+  const [rows, setRows] = useState<RowData[]>([]);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+
+  // Load from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("frontendRows");
+    if (saved) {
+      setRows(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem("frontendRows", JSON.stringify(rows));
+  }, [rows]);
+
+  const handleSubmit = () => {
+    if (!form.name || !form.email || !form.phone) return;
+
+    if (editId) {
+      setRows(
+        rows.map((row) =>
+          row.id === editId ? { ...row, ...form } : row
+        )
+      );
+      setEditId(null);
+    } else {
+      setRows([
+        ...rows,
+        { id: Date.now(), ...form },
+      ]);
+    }
+
+    setForm({ name: "", email: "", phone: "" });
+  };
+
+  const handleEdit = (row: RowData) => {
+    setForm({
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+    });
+    setEditId(row.id);
+  };
+
+  const handleDelete = (id: number) => {
+    setRows(rows.filter((row) => row.id !== id));
+  };
+
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      <div className={styles.container}>
+        <h2 className={styles.title}>Frontend CRUD Table</h2>
+
+        <div className={styles.form}>
+          <input
+            className={styles.input}
+            placeholder="Name"
+            value={form.name}
+            onChange={(e) =>
+              setForm({ ...form, name: e.target.value })
+            }
+          />
+          <input
+            className={styles.input}
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) =>
+              setForm({ ...form, email: e.target.value })
+            }
+          />
+          <input
+            className={styles.input}
+            placeholder="Phone"
+            value={form.phone}
+            onChange={(e) =>
+              setForm({ ...form, phone: e.target.value })
+            }
+          />
+
+          <button className={styles.button} onClick={handleSubmit}>
+            {editId ? "Update Data" : "Add Data"}
+          </button>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={4} className={styles.empty}>
+                  No data available
+                </td>
+              </tr>
+            ) : (
+              rows.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.name}</td>
+                  <td>{row.email}</td>
+                  <td>{row.phone}</td>
+                  <td className={styles.actions}>
+                    <button
+                      className={styles.editBtn}
+                      onClick={() => handleEdit(row)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleDelete(row.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
